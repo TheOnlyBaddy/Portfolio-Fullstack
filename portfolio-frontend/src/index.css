@@ -1,0 +1,285 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white dark:bg-dark-900 text-dark-900 dark:text-white transition-colors duration-300;
+  }
+}
+
+@layer components {
+  .section-padding {
+    @apply py-16 px-4 sm:px-6 lg:px-8;
+  }
+
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:scale-105 hover:shadow-xl;
+  }
+
+  .nav-link {
+    @apply relative px-3 py-2 text-sm font-medium transition-colors duration-200 hover:text-primary-600 dark:hover:text-primary-400;
+  }
+
+  .nav-link::after {
+    @apply content-[''] absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-primary-500 via-blue-500 to-primary-400 rounded-full opacity-90 transition-all duration-300;
+  }
+
+  .nav-link:hover::after {
+    @apply w-full;
+  }
+
+  /* Section separation styles */
+  .section-divider {
+    @apply relative;
+  }
+
+  .section-divider::before {
+    @apply content-[''] absolute top-0 left-1/2 transform -translate-x-1/2 w-24 h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-600 to-transparent;
+  }
+
+  .section-divider::after {
+    @apply content-[''] absolute top-0 left-1/2 transform -translate-x-1/2 w-16 h-px bg-gradient-to-r from-transparent via-primary-400 to-transparent;
+  }
+
+  /* Enhanced Language Tag Styles */
+  .tech-tag {
+    @apply text-xs px-3 py-1.5 rounded-full font-medium transition-all duration-300 ease-out;
+    background-color: color-mix(in srgb, var(--tag-color, #6b7280) 12%, white 88%);
+    color: color-mix(in srgb, var(--tag-color, #6b7280) 80%, black 20%);
+    border: 1.5px solid color-mix(in srgb, var(--tag-color, #6b7280) 40%, transparent 60%);
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  .tech-tag::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 60%);
+    z-index: -1;
+    transition: opacity 0.3s ease;
+    opacity: 0.8;
+  }
+
+  .dark .tech-tag {
+    background-color: color-mix(in srgb, var(--tag-color, #9ca3af) 15%, #1f2937 85%);
+    color: color-mix(in srgb, var(--tag-color, #9ca3af) 90%, white 10%);
+    border-color: color-mix(in srgb, var(--tag-color, #9ca3af) 60%, transparent 40%);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .dark .tech-tag::before {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+  }
+
+  .tech-tag:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: color-mix(in srgb, var(--tag-color, #6b7280) 60%, transparent 40%);
+  }
+
+  .dark .tech-tag:hover {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+    border-color: color-mix(in srgb, var(--tag-color, #9ca3af) 80%, transparent 20%);
+  }
+
+  .tech-tag:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  /* Language-specific colors - More vibrant and distinct colors */
+  .tech-tag-javascript {
+    --tag-color: #f0db4f;
+  }
+  .tech-tag-typescript {
+    --tag-color: #3178c6;
+  }
+  .tech-tag-python {
+    --tag-color: #3776ab;
+  }
+  .tech-tag-java {
+    --tag-color: #f89820;
+  }
+  .tech-tag-html {
+    --tag-color: #e44d26;
+  }
+  .tech-tag-css {
+    --tag-color: #264de4;
+  }
+  .tech-tag-php {
+    --tag-color: #777bb3;
+  }
+  .tech-tag-ruby {
+    --tag-color: #cc342d;
+  }
+  .tech-tag-cpp {
+    --tag-color: #00599c;
+  }
+  .tech-tag-csharp {
+    --tag-color: #239120;
+  }
+  .tech-tag-go {
+    --tag-color: #00add8;
+  }
+  .tech-tag-rust {
+    --tag-color: #000000;
+  }
+  .tech-tag-swift {
+    --tag-color: #f05138;
+  }
+  .tech-tag-kotlin {
+    --tag-color: #7f52ff;
+  }
+  .tech-tag-dart {
+    --tag-color: #0175c2;
+  }
+  .tech-tag-shell {
+    --tag-color: #4eaa25;
+  }
+  .tech-tag-powershell {
+    --tag-color: #012456;
+  }
+  .tech-tag-vue {
+    --tag-color: #41b883;
+  }
+  .tech-tag-react {
+    --tag-color: #61dafb;
+  }
+  .tech-tag-angular {
+    --tag-color: #dd0031;
+  }
+  .tech-tag-svelte {
+    --tag-color: #ff3e00;
+  }
+  .tech-tag-dockerfile {
+    --tag-color: #2496ed;
+  }
+  .tech-tag-makefile {
+    --tag-color: #427819;
+  }
+  .tech-tag-jupyter {
+    --tag-color: #f37626;
+  }
+  .tech-tag-other {
+    --tag-color: #6c757d;
+  }
+
+  /* Enhanced blur effects */
+  .blur-section-1 {
+    backdrop-filter: blur(1px);
+  }
+  .blur-section-2 {
+    backdrop-filter: blur(2px);
+  }
+  .blur-section-3 {
+    backdrop-filter: blur(3px);
+  }
+
+  /* Button blur effects */
+  .btn-blur {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .btn-blur-light {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  /* Rounded button styles */
+  .btn-rounded {
+    @apply rounded-3xl;
+  }
+  .btn-rounded-lg {
+    @apply rounded-full;
+  }
+
+  /* Profile photo styles */
+  .profile-photo-container {
+    transition: all 0.3s ease;
+  }
+
+  .profile-photo-container:hover {
+    transform: scale(1.05);
+  }
+
+  .profile-photo-ring {
+    animation: rotate 20s linear infinite;
+  }
+
+  @keyframes rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
+
+/* Animations */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.float-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+@keyframes blob {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
