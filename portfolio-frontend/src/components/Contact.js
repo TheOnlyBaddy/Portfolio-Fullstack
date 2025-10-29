@@ -131,10 +131,10 @@ const Contact = () => {
     setSubmitting(true);
     
     try {
-      // Replace with your backend URL (use environment variable in production)
       const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
-      console.log('Sending request to:', `${backendUrl}/api/contact`);
-      const response = await fetch(`${backendUrl}/api/contact`, {
+      const apiUrl = `${backendUrl.replace(/\/+$/, '')}/api/contact`;
+      console.log('Sending request to:', apiUrl);
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
