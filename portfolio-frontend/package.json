@@ -16,7 +16,7 @@
     "typewriter-effect": "^2.22.0"
   },
   "scripts": {
-    "prepare": "husky install || true",
+    "prepare": "[ -d .git ] && husky install || echo 'Skipping husky install in non-git environment'",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
