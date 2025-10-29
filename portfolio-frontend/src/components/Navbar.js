@@ -36,7 +36,7 @@ const Navbar = () => {
 
   const { scrollYProgress } = useScroll();
 
-  useMotionValueEvent(scrollYProgress, 'change', latest => {
+  useMotionValueEvent(scrollYProgress, 'change', _latest => {
     const sections = ['home', 'about', 'skills', 'projects', 'contact'];
     const scrollPosition = window.scrollY + 100;
 
@@ -183,11 +183,11 @@ const Navbar = () => {
                 <motion.div
                   key={item.name}
                   className="relative"
-                  whileHover={!isActive ? "hover" : undefined}
+                  whileHover={!isActive ? 'hover' : undefined}
                   initial="initial"
                   animate={isActive ? 'active' : 'initial'}
                 >
-                  <motion.div 
+                  <motion.div
                     className="relative group"
                     initial={false}
                     animate={isActive ? 'active' : 'inactive'}
@@ -204,9 +204,7 @@ const Navbar = () => {
                       }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <span className="relative z-20 font-medium text-sm">
-                        {item.name}
-                      </span>
+                      <span className="relative z-20 font-medium text-sm">{item.name}</span>
                     </motion.button>
                     {!isActive && (
                       <motion.div

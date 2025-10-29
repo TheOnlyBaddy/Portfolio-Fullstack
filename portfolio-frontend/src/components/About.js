@@ -14,7 +14,6 @@ const About = () => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, amount: 0.1 });
   const [activeTab, setActiveTab] = useState('skills');
-  const [activeField, setActiveField] = useState(null);
 
   const features = [
     {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useInView } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 import { Github, Linkedin, Code, Mail, ArrowUp } from 'lucide-react';
 
 const Wave = () => {
@@ -143,7 +143,8 @@ const Footer = () => {
               </span>
             </motion.div>
             <motion.p className="text-gray-400 text-sm leading-relaxed mb-6" variants={item}>
-              Crafting digital experiences with clean code and innovative solutions. Let&apos;s build something amazing together.
+              Crafting digital experiences with clean code and innovative solutions. Let&apos;s
+              build something amazing together.
             </motion.p>
           </motion.div>
 

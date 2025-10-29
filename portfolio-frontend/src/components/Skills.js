@@ -254,7 +254,7 @@ export default function Skills() {
                         },
                       }}
                     >
-                      {skill.category.map((c, idx) => (
+                      {skill.category.map((c, _idx) => (
                         <motion.span
                           key={`${skill.name}-${c}`}
                           className="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-dark-600 text-gray-600 dark:text-gray-300 shadow-sm"

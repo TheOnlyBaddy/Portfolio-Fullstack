@@ -1,9 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence, useTransform, useMotionValue, useSpring } from 'framer-motion';
 import { Mail, Send, Phone, Map, Github, Linkedin } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
 import { primaryButton } from '../utils/buttonStyles';
-import emailjs from '@emailjs/browser';
 
 // Particle background component
 const ParticlesBackground = () => {
@@ -39,14 +38,11 @@ const ParticlesBackground = () => {
 
 // 3D Card Component
 const ContactCard = ({ icon: Icon, title, value, link, color, index }) => {
-  const [isHovered, setIsHovered] = useState(false);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotateX = useTransform(y, [-50, 50], [10, -10]);
   const rotateY = useTransform(x, [-50, 50], [-10, 10]);
   const springConfig = { damping: 15, stiffness: 200 };
-  const springX = useSpring(x, springConfig);
-  const springY = useSpring(y, springConfig);
   const springRotateX = useSpring(rotateX, springConfig);
   const springRotateY = useSpring(rotateY, springConfig);
 
@@ -61,7 +57,6 @@ const ContactCard = ({ icon: Icon, title, value, link, color, index }) => {
   const handleMouseLeave = () => {
     x.set(0);
     y.set(0);
-    setIsHovered(false);
   };
 
   return (
@@ -75,7 +70,6 @@ const ContactCard = ({ icon: Icon, title, value, link, color, index }) => {
         href={link}
         className="relative group flex items-center p-6 rounded-xl bg-white dark:bg-dark-800 shadow-sm hover:shadow transition-all duration-200 w-full"
         onMouseMove={handleMouseMove}
-        onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={handleMouseLeave}
         style={{
           transform: 'perspective(1000px)',
@@ -129,7 +123,7 @@ const Contact = () => {
     e.preventDefault();
     setSent(false);
     setSubmitting(true);
-    
+
     try {
       const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
       const apiUrl = `${backendUrl.replace(/\/+$/, '')}/api/contact`;
