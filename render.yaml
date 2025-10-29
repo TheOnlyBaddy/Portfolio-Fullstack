@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: portfolio-backend
+    env: node
+    nodeVersion: 18.x  # Match your local Node.js version
+    buildCommand: cd portfolio-backend && npm ci
+    startCommand: cd portfolio-backend && node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        fromDatabase:
+          name: portfolio-db
+          property: connectionString
+      - key: PORT
+        value: 10000
+      - key: CLIENT_URL
+        value: https://your-frontend-url.com  # Update this with your frontend URL
+
+databases:
+  - name: portfolio-db
+    databaseName: portfolio
+    user: portfolio-user
+    plan: free
