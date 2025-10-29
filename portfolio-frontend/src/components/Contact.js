@@ -133,16 +133,19 @@ const Contact = () => {
     try {
       // Replace with your backend URL (use environment variable in production)
       const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+      console.log('Sending request to:', `${backendUrl}/api/contact`);
       const response = await fetch(`${backendUrl}/api/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
+        mode: 'cors',
         body: JSON.stringify({
           name: formData.name,
           email: formData.email,
           subject: formData.subject,
-          message: formData.message
+          message: formData.message,
         }),
       });
 

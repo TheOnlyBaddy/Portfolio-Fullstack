@@ -1,88 +1,68 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const mysql = require('mysql2/promise');
+const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
 const { body, validationResult } = require('express-validator');
+const Contact = require('./models/Contact');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000;
 
-// Create MySQL connection pool
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT || 3306,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
-
-// Create contacts table if it doesn't exist
-async function initializeDatabase() {
+// MongoDB connection
+async function connectToDatabase() {
   try {
-    const createTableQuery = `
-      CREATE TABLE IF NOT EXISTS contacts (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) NOT NULL,
-        subject VARCHAR(255) NOT NULL,
-        message TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `;
-    await pool.query(createTableQuery);
-    console.log('Database initialized');
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('Connected to MongoDB');
   } catch (error) {
-    console.error('Error initializing database:', error);
+    console.error('Error connecting to MongoDB:', error);
     process.exit(1);
   }
 }
 
-// Initialize the database
-initializeDatabase();
+// Initialize the database connection
+connectToDatabase();
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    process.env.FRONTEND_URL
+  ].filter(Boolean),
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
   optionsSuccessStatus: 200
 }));
+
+// Handle preflight requests
+app.options('*', cors());
 app.use(express.json());
 
-// Contact model functions
-const Contact = {
+// Contact controller functions
+const contactController = {
   async create(contactData) {
-    const [result] = await pool.query(
-      'INSERT INTO contacts (name, email, subject, message) VALUES (?, ?, ?, ?)',
-      [contactData.name, contactData.email, contactData.subject, contactData.message]
-    );
-    return { id: result.insertId, ...contactData };
+    const contact = new Contact(contactData);
+    await contact.save();
+    return contact;
   },
   
   async findAll() {
-    const [rows] = await pool.query('SELECT * FROM contacts ORDER BY created_at DESC');
-    return rows;
+    return await Contact.find().sort({ createdAt: -1 });
   },
   
   async findById(id) {
-    const [rows] = await pool.query('SELECT * FROM contacts WHERE id = ?', [id]);
-    return rows[0];
+    return await Contact.findById(id);
   }
 };
 
 // Nodemailer transporter
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: process.env.SMTP_SECURE === 'true',
+  service: 'gmail',
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
-  },
-  tls: {
-    rejectUnauthorized: false
   }
 });
 
@@ -101,147 +81,232 @@ app.get('/', (req, res) => {
 });
 
 // Contact form submission
-app.post('/api/contact',
-  [
-    body('name').trim().isLength({ min: 2 }).withMessage('Name must be at least 2 characters long'),
-    body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email'),
-    body('subject').trim().notEmpty().withMessage('Subject is required'),
-    body('message').trim().isLength({ min: 10 }).withMessage('Message must be at least 10 characters long')
-  ],
-  async (req, res) => {
-    try {
-      // Validate request
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
-      const { name, email, subject, message } = req.body;
-
-      // Save to database
-      await Contact.create({ name, email, subject, message });
-
-      // Send thank you email to user
-      const userMailOptions = {
-        from: `"${process.env.EMAIL_FROM || 'Portfolio Contact'}" <${process.env.SMTP_USER}>`,
-        to: email,
-        subject: 'Thank You for Contacting Me!',
-        text: `Hi ${name},\n\nThank you for reaching out through my portfolio! I've received your message and will get back to you as soon as possible.\n\nHere's a quick summary of your submission:\nName: ${name}\nSubject: ${subject}\n\nYour Message:\n${message}\n\nI appreciate you taking the time to write to me.\n\nWarm regards,\n${process.env.EMAIL_SIGNATURE || 'Your Name'}`,
-        html: `
-          <div style="max-width: 600px; margin: 0 auto; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #2d3748;">
-            <div style="background-color: #4f46e5; padding: 2rem; text-align: center; color: white;">
-              <h1 style="margin: 0; font-size: 1.875rem; font-weight: 600;">Thank You for Reaching Out!</h1>
-            </div>
-            <div style="padding: 2rem; background-color: #ffffff; border: 1px solid #e2e8f0; border-top: none;">
-              <p style="font-size: 1.125rem; margin-bottom: 1.5rem;">Hi ${name},</p>
-              <p style="margin-bottom: 1.5rem;">Thank you for contacting me through my portfolio. I've received your message and will get back to you as soon as possible, typically within 24-48 hours.</p>
-              
-              <div style="background-color: #f8fafc; border-left: 4px solid #4f46e5; padding: 1rem; margin: 1.5rem 0; border-radius: 0.25rem;">
-                <p style="margin: 0.5rem 0;"><strong>Subject:</strong> ${subject}</p>
-                <p style="margin: 0.5rem 0 0 0;"><strong>Your Message:</strong></p>
-                <p style="margin: 0.5rem 0 0 0; white-space: pre-line; background-color: white; padding: 0.75rem; border-radius: 0.25rem; border: 1px solid #e2e8f0;">${message}</p>
-              </div>
-              
-              <p style="margin-bottom: 1.5rem;">If you have any additional information to add, feel free to reply to this email.</p>
-              
-              <p style="margin-bottom: 0.5rem;">Best regards,</p>
-              <p style="margin: 0; font-weight: 600;">${process.env.EMAIL_SIGNATURE || 'Shubh Barnwal'}</p>
-              
-              <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0; text-align: center; color: #718096; font-size: 0.875rem;">
-                <p style="margin: 0.5rem 0;">This is an automated message. Please do not reply to this email.</p>
-              </div>
-            </div>
-          </div>
-        `
-      };
-
-      // Send notification to admin
-      const adminMailOptions = {
-        from: `"Portfolio Contact Form" <${process.env.SMTP_USER}>`,
-        to: process.env.ADMIN_EMAIL,
-        subject: `📧 New Contact: ${subject.length > 30 ? subject.substring(0, 30) + '...' : subject}`,
-        text: `🔔 New Contact Form Submission 🔔
-
-You've received a new message from your portfolio website.
-
-📝 Contact Details:
-• Name: ${name}
-• Email: ${email}
-• Subject: ${subject}
-• Received: ${new Date().toLocaleString()}
-
-📩 Message:
-${message}
-
-📤 You can reply directly to this email to respond to ${name}.`,
-        html: `
-          <div style="max-width: 600px; margin: 0 auto; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #2d3748;">
-            <div style="background-color: #4f46e5; padding: 1.5rem; text-align: center; color: white; border-radius: 0.5rem 0.5rem 0 0;">
-              <h1 style="margin: 0; font-size: 1.5rem; font-weight: 600;">✨ New Portfolio Contact ✨</h1>
-              <p style="margin: 0.5rem 0 0; opacity: 0.9; font-size: 0.9rem;">${new Date().toLocaleString()}</p>
-            </div>
-            
-            <div style="padding: 2rem; background-color: #ffffff; border: 1px solid #e2e8f0; border-top: none;">
-              <div style="background-color: #f0f9ff; padding: 1.25rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
-                <h2 style="margin: 0 0 1rem 0; color: #0369a1; font-size: 1.25rem;">👤 Contact Information</h2>
-                <table style="width: 100%; border-collapse: collapse;">
-                  <tr>
-                    <td style="padding: 0.5rem 0; border-bottom: 1px solid #e0f2fe; width: 100px; font-weight: 600;">Name:</td>
-                    <td style="padding: 0.5rem 0; border-bottom: 1px solid #e0f2fe;">${name}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 0.5rem 0; border-bottom: 1px solid #e0f2fe; font-weight: 600;">Email:</td>
-                    <td style="padding: 0.5rem 0; border-bottom: 1px solid #e0f2fe;">
-                      <a href="mailto:${email}" style="color: #3b82f6; text-decoration: none;">${email}</a>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 0.5rem 0; font-weight: 600;">Subject:</td>
-                    <td style="padding: 0.5rem 0;">${subject}</td>
-                  </tr>
-                </table>
-              </div>
-              
-              <div style="margin-bottom: 1.5rem;">
-                <h3 style="margin: 0 0 0.75rem 0; color: #1e40af; font-size: 1.1rem;">📩 Message</h3>
-                <div style="background-color: #f8fafc; padding: 1.25rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; white-space: pre-line;">
-                  ${message}
-                </div>
-              </div>
-              
-              <div style="text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
-                <a href="mailto:${email}" style="display: inline-block; background-color: #4f46e5; color: white; text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 0.375rem; font-weight: 500; transition: background-color 0.2s;">
-                  ✉️ Reply to ${name.split(' ')[0]}
-                </a>
-                <p style="margin: 1rem 0 0; color: #64748b; font-size: 0.875rem;">
-                  This message was sent from your portfolio contact form
-                </p>
-              </div>
-            </div>
-          </div>
-        `
-      };
-
-      // Send emails in parallel
-      await Promise.all([
-        transporter.sendMail(userMailOptions),
-        transporter.sendMail(adminMailOptions)
-      ]);
-
-      res.status(200).json({ 
-        success: true, 
-        message: 'Thank you for your message! I will get back to you soon.' 
-      });
-
-    } catch (error) {
-      console.error('Error processing contact form:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'An error occurred while processing your request. Please try again later.' 
-      });
-    }
+app.post('/api/contact', [
+  body('name').trim().notEmpty().withMessage('Name is required'),
+  body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email'),
+  body('subject').trim().notEmpty().withMessage('Subject is required'),
+  body('message').trim().notEmpty().withMessage('Message is required')
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
   }
-);
+
+  try {
+    // Save to MongoDB first
+    const contact = await contactController.create(req.body);
+    
+    // Send email to admin
+    await transporter.sendMail({
+      from: `"Portfolio Contact" <${process.env.SMTP_USER}>`,
+      to: process.env.SMTP_USER, // Admin email
+      subject: `📬 New Contact: ${req.body.subject}`,
+      text: `You have a new contact form submission:
+
+Name: ${req.body.name}
+Email: ${req.body.email}
+Subject: ${req.body.subject}
+
+Message:
+${req.body.message}
+
+---
+📧 Reply to: ${req.body.email}
+🌐 Received via Portfolio Contact Form`,
+      html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>New Contact Form Submission</title>
+      </head>
+      <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f5f7ff; color: #333;">
+          <div style="max-width: 600px; margin: 20px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+              <!-- Header -->
+              <div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 32px 24px; text-align: center; color: white;">
+                  <h1 style="margin: 0; font-size: 24px; font-weight: 600;">New Contact Form Submission</h1>
+                  <p style="opacity: 0.9; margin: 8px 0 0; font-size: 14px;">${new Date().toLocaleString()}</p>
+              </div>
+              
+              <!-- Content -->
+              <div style="padding: 32px 24px;">
+                  <div style="background: #f8fafc; border-radius: 8px; padding: 20px; margin-bottom: 24px; border: 1px solid #e2e8f0;">
+                      <div style="display: flex; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0;">
+                          <div style="width: 48px; height: 48px; background: #e0e7ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 16px; color: #4f46e5; font-size: 20px; font-weight: bold;">
+                              ${req.body.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                              <h3 style="margin: 0 0 4px 0; font-size: 18px; color: #1e293b;">${req.body.name}</h3>
+                              <p style="margin: 0; color: #64748b; font-size: 14px;">${req.body.email}</p>
+                          </div>
+                      </div>
+                      
+                      <h4 style="margin: 0 0 12px 0; font-size: 16px; color: #334155;">${req.body.subject}</h4>
+                      <p style="margin: 0; color: #475569; line-height: 1.6; white-space: pre-line;">${req.body.message}</p>
+                  </div>
+                  
+                  <div style="text-align: center; margin-top: 32px;">
+                      <a href="mailto:${req.body.email}" style="display: inline-block; background: #4f46e5; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500; transition: background 0.2s;">
+                          ✉️ Reply to ${req.body.name.split(' ')[0]}
+                      </a>
+                      <p style="margin: 16px 0 0; font-size: 13px; color: #94a3b8;">
+                          This message was sent via your portfolio contact form
+                      </p>
+                  </div>
+              </div>
+              
+              <!-- Footer -->
+              <div style="background: #f8fafc; padding: 16px; text-align: center; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8;">
+                  <p style="margin: 0;">© ${new Date().getFullYear()} ${process.env.ADMIN_NAME || 'Your Portfolio'}. All rights reserved.</p>
+              </div>
+          </div>
+      </body>
+      </html>
+      `
+    });
+
+    // Send confirmation email to user
+    await transporter.sendMail({
+      from: `"${process.env.ADMIN_NAME || 'Portfolio Admin'}" <${process.env.SMTP_USER}>`,
+      to: req.body.email,
+      subject: `✅ Message Received - ${req.body.subject}`,
+      text: `Hi ${req.body.name},
+
+Thank you for reaching out! I've received your message and will get back to you as soon as possible.
+
+--- Message Details ---
+Subject: ${req.body.subject}
+Date: ${new Date().toLocaleString()}
+
+Your Message:
+${req.body.message}
+
+---
+
+I typically respond within 24-48 hours. If you need immediate assistance, please don't hesitate to reach out again.
+
+Warm regards,
+${process.env.ADMIN_NAME || 'Portfolio Admin'}
+
+--
+This is an automated message. Please do not reply to this email.`,
+      html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Thank You for Contacting Me</title>
+      </head>
+      <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f5f7ff; color: #333;">
+          <div style="max-width: 600px; margin: 20px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+              <!-- Header -->
+              <div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 40px 24px; text-align: center; color: white;">
+                  <div style="margin-bottom: 16px;">
+                      <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto;">
+                          <path d="M22 10.5V17C22 20 20 22 17 22H7C4 22 2 20 2 17V7C2 4 4 2 7 2H14.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path d="M6 9L12 13L18 9" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path d="M21 7V2H16" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path d="M16 2L21 7" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                  </div>
+                  <h1 style="margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">Message Received!</h1>
+                  <p style="opacity: 0.9; margin: 8px 0 0; font-size: 15px; font-weight: 400;">Thank you for reaching out, ${req.body.name.split(' ')[0]}!</p>
+              </div>
+              
+              <!-- Content -->
+              <div style="padding: 32px 24px;">
+                  <div style="background: #f8fafc; border-radius: 8px; padding: 20px; margin-bottom: 24px; border: 1px solid #e2e8f0;">
+                      <h3 style="margin: 0 0 16px 0; font-size: 16px; color: #4f46e5; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Your Message</h3>
+                      <div style="background: white; border-radius: 6px; padding: 16px; border: 1px solid #e2e8f0;">
+                          <p style="margin: 0 0 8px; font-weight: 500; color: #334155;">${req.body.subject}</p>
+                          <div style="height: 1px; background: #e2e8f0; margin: 12px 0;"></div>
+                          <p style="margin: 0; color: #475569; line-height: 1.6; white-space: pre-line;">${req.body.message}</p>
+                      </div>
+                      <p style="margin: 16px 0 0; font-size: 14px; color: #64748b;">
+                          <span style="display: inline-flex; align-items: center; margin-right: 16px;">
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 6px;">
+                                  <path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                  <path d="M12 8V13" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                  <path d="M11.9941 16H12.0031" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                              </svg>
+                              ${new Date().toLocaleString()}
+                          </span>
+                      </p>
+                  </div>
+                  
+                  <div style="text-align: center; margin: 32px 0 24px;">
+                      <p style="margin: 0 0 16px; font-size: 15px; color: #475569; line-height: 1.6;">
+                          I've received your message and will get back to you as soon as possible. 
+                          <span style="display: block; margin-top: 8px; font-weight: 500; color: #4f46e5;">
+                              Typical response time: 24-48 hours
+                          </span>
+                      </p>
+                      
+                      <div style="margin: 24px 0; display: flex; justify-content: center;">
+                          <div style="width: 60px; height: 4px; background: #e2e8f0; border-radius: 2px;"></div>
+                      </div>
+                      
+                      <p style="margin: 0; font-size: 15px; color: #64748b;">
+                          In the meantime, feel free to explore my portfolio:
+                      </p>
+                      <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}" style="display: inline-block; margin-top: 12px; color: #4f46e5; font-weight: 500; text-decoration: none;">
+                          Visit My Portfolio →
+                      </a>
+                  </div>
+              </div>
+              
+              <!-- Footer -->
+              <div style="background: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #e2e8f0;">
+                  <p style="margin: 0 0 16px; font-size: 14px; color: #94a3b8;">
+                      This is an automated message. Please do not reply to this email.
+                  </p>
+                  <p style="margin: 0; font-size: 13px; color: #cbd5e1;">
+                      © ${new Date().getFullYear()} ${process.env.ADMIN_NAME || 'Portfolio'}. All rights reserved.
+                  </p>
+              </div>
+          </div>
+      </body>
+      </html>
+      `
+    });
+
+    res.status(201).json({ 
+      success: true,
+      message: 'Message sent successfully!',
+      contact 
+    });
+  } catch (error) {
+    console.error('Error saving contact:', error);
+    res.status(500).json({ error: 'Failed to send message. Please try again later.' });
+  }
+});
+
+// Get all contacts (for admin)
+app.get('/api/contacts', async (req, res) => {
+  try {
+    const contacts = await contactController.findAll();
+    res.json(contacts);
+  } catch (error) {
+    console.error('Error fetching contacts:', error);
+    res.status(500).json({ error: 'Failed to fetch contacts' });
+  }
+});
+
+// Get single contact (for admin)
+app.get('/api/contacts/:id', async (req, res) => {
+  try {
+    const contact = await contactController.findById(req.params.id);
+    if (!contact) {
+      return res.status(404).json({ error: 'Contact not found' });
+    }
+    res.json(contact);
+  } catch (error) {
+    console.error('Error fetching contact:', error);
+    res.status(500).json({ error: 'Failed to fetch contact' });
+  }
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
