@@ -8,16 +8,8 @@ services:
       - key: NODE_ENV
         value: production
       - key: MONGODB_URI
-        fromDatabase:
-          name: portfolio-db
-          property: connectionString
+        value: mongodb+srv://Baddy:Shubh2408@cluster0.sgiw42d.mongodb.net/portfolio?retryWrites=true&w=majority  # Replace with your MongoDB Atlas URI
       - key: PORT
         value: 10000
       - key: CLIENT_URL
         value: https://your-frontend-url.com  # Update this with your frontend URL
-
-databases:
-  - name: portfolio-db
-    databaseName: portfolio
-    user: portfolio-user
-    plan: free
