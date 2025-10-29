@@ -16,13 +16,13 @@
     "typewriter-effect": "^2.22.0"
   },
   "scripts": {
+    "prepare": "husky install || true",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint src --ext .js,.jsx",
     "format": "prettier --write \"src/**/*.{js,jsx}\"",
-    "prepare": "husky install",
     "check-updates": "npx npm-check-updates"
   },
   "eslintConfig": {
