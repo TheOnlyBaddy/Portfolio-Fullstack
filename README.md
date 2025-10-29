@@ -1,6 +1,6 @@
 # 🌐 Personal Portfolio Website
 
-![Portfolio Banner](https://github.com/TheOnlyBaddy/Portfolio/blob/main/portfolio-frontend/publicPortfolio.jpg)
+![Portfolio Banner](https://github.com/TheOnlyBaddy/Portfolio/blob/main/portfolio-frontend/public/Portfolio.jpg)
 
 A modern, responsive **developer portfolio website** showcasing my projects, skills, and journey as a developer.  
 Built with a clean and elegant design, smooth animations, and a functional contact form powered by **Node.js** and **Gmail SMTP** for direct communication.
