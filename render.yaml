@@ -2,7 +2,6 @@ services:
   - type: web
     name: portfolio-backend
     env: node
-    nodeVersion: 18.x  # Match your local Node.js version
     buildCommand: cd portfolio-backend && npm ci
     startCommand: cd portfolio-backend && node server.js
     envVars:
