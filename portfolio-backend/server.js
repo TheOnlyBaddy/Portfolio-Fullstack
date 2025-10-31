@@ -57,23 +57,47 @@ const contactController = {
   }
 };
 
-// Nodemailer transporter with simple authentication
+// Nodemailer transporter with Gmail SMTP
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.SMTP_PORT || '465'),
+  secure: process.env.SMTP_SECURE === 'true',
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
-  }
+  },
+  tls: {
+    // Do not fail on invalid certs
+    rejectUnauthorized: false
+  },
+  // Increase timeout to 30 seconds
+  connectionTimeout: 30000,
+  greetingTimeout: 30000,
+  socketTimeout: 30000
 });
 
 // Test email configuration with better error handling
 async function testEmailConfig() {
   try {
-    await transporter.verify();
-    console.log('Server is ready to send emails');
+    await new Promise((resolve, reject) => {
+      // Verify connection configuration
+      transporter.verify(function(error, success) {
+        if (error) {
+          console.error('SMTP Connection Error:', {
+            code: error.code,
+            command: error.command,
+            message: error.message
+          });
+          reject(error);
+        } else {
+          console.log('Server is ready to send emails');
+          resolve(true);
+        }
+      });
+    });
     return true;
   } catch (error) {
-    console.error('Error with email configuration:', {
+    console.error('Email configuration test failed:', {
       error: error.message,
       code: error.code,
       stack: error.stack
@@ -81,6 +105,7 @@ async function testEmailConfig() {
     return false;
   }
 }
+
 
 // Test the email configuration on server start
 testEmailConfig();
