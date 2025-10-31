@@ -89,6 +89,30 @@ app.get('/', async (req, res) => {
       <style>
         body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
         h1 { color: #4f46e5; }
+        .status-container {
+          display: flex;
+          gap: 20px;
+          margin: 20px 0;
+          flex-wrap: wrap;
+        }
+        .status-item {
+          padding: 10px 15px;
+          border-radius: 20px;
+          font-weight: bold;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .status-dot {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          display: inline-block;
+        }
+        .status-dot.connected { background-color: #10b981; }
+        .status-dot.disconnected { background-color: #ef4444; }
+        .connected { background-color: #ecfdf5; color: #065f46; }
+        .disconnected { background-color: #fef2f2; color: #991b1b; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         th { background-color: #f8fafc; font-weight: bold; }
@@ -99,6 +123,16 @@ app.get('/', async (req, res) => {
     </head>
     <body>
       <h1>Portfolio API - Contact Submissions</h1>
+      <div class="status-container">
+        <div class="status-item ${mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'}">
+          <span class="status-dot ${mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'}"></span>
+          Database: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}
+        </div>
+        <div class="status-item connected" id="frontend-status">
+          <span class="status-dot connected"></span>
+          Frontend: Checking...
+        </div>
+      </div>
       <p>Total submissions: ${contacts.length}</p>
       <table>
         <thead>
@@ -129,6 +163,26 @@ app.get('/', async (req, res) => {
         </tbody>
       </table>
       <p><a href="/api/contacts">View raw JSON data</a></p>
+      <script>
+        // Check frontend connection by making an API call
+        fetch('/api/contacts')
+          .then(response => response.json())
+          .then(data => {
+            const statusEl = document.getElementById('frontend-status');
+            statusEl.innerHTML = `
+              <span class="status-dot connected"></span>
+              Frontend: Connected
+            `;
+          })
+          .catch(error => {
+            const statusEl = document.getElementById('frontend-status');
+            statusEl.className = 'status-item disconnected';
+            statusEl.innerHTML = `
+              <span class="status-dot disconnected"></span>
+              Frontend: Connection Error
+            `;
+          });
+      </script>
     </body>
     </html>
     `;
