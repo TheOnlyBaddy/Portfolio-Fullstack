@@ -75,9 +75,69 @@ transporter.verify(function(error, success) {
   }
 });
 
-// Routes
-app.get('/', (req, res) => {
-  res.json({ message: 'Welcome to the Portfolio API' });
+// Root route with contact data table
+app.get('/', async (req, res) => {
+  try {
+    const contacts = await Contact.find({}).sort({ createdAt: -1 });
+    
+    // Create HTML table
+    let html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Portfolio API - Contact Submissions</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        h1 { color: #4f46e5; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f8fafc; font-weight: bold; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f1f5ff; }
+        .message { white-space: pre-wrap; }
+      </style>
+    </head>
+    <body>
+      <h1>Portfolio API - Contact Submissions</h1>
+      <p>Total submissions: ${contacts.length}</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Subject</th>
+            <th>Message</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    contacts.forEach(contact => {
+      html += `
+        <tr>
+          <td>${contact.name || ''}</td>
+          <td>${contact.email || ''}</td>
+          <td>${contact.subject || ''}</td>
+          <td class="message">${contact.message || ''}</td>
+          <td>${new Date(contact.createdAt).toLocaleString()}</td>
+        </tr>
+      `;
+    });
+
+    html += `
+        </tbody>
+      </table>
+      <p><a href="/api/contacts">View raw JSON data</a></p>
+    </body>
+    </html>
+    `;
+
+    res.send(html);
+  } catch (error) {
+    console.error('Error fetching contacts:', error);
+    res.status(500).send('Error loading contact data');
+  }
 });
 
 // Contact form submission
