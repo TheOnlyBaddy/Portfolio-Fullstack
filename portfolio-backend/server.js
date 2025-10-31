@@ -57,7 +57,7 @@ const contactController = {
   }
 };
 
-// Nodemailer transporter
+// Nodemailer transporter with simple authentication
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -66,14 +66,24 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Test email configuration
-transporter.verify(function(error, success) {
-  if (error) {
-    console.error('Error with email configuration:', error);
-  } else {
-    console.log('Server is ready to take our messages');
+// Test email configuration with better error handling
+async function testEmailConfig() {
+  try {
+    await transporter.verify();
+    console.log('Server is ready to send emails');
+    return true;
+  } catch (error) {
+    console.error('Error with email configuration:', {
+      error: error.message,
+      code: error.code,
+      stack: error.stack
+    });
+    return false;
   }
-});
+}
+
+// Test the email configuration on server start
+testEmailConfig();
 
 // Root route with contact data table
 app.get('/', async (req, res) => {
@@ -205,7 +215,7 @@ app.post('/api/contact', [
     const contact = await contactController.create(req.body);
     
     // Send email to admin
-    await transporter.sendMail({
+    const mailOptions = {
       from: `"Portfolio Contact" <${process.env.SMTP_USER}>`,
       to: process.env.SMTP_USER, // Admin email
       subject: `📬 New Contact: ${req.body.subject}`,
@@ -272,10 +282,23 @@ ${req.body.message}
       </body>
       </html>
       `
-    });
+    };
+
+    try {
+      // Send admin notification email
+      await transporter.sendMail(mailOptions);
+      console.log('Admin notification email sent successfully');
+    } catch (emailError) {
+      console.error('Error sending admin notification email:', {
+        error: emailError.message,
+        code: emailError.code,
+        stack: emailError.stack
+      });
+      // Continue with the response even if email fails
+    }
 
     // Send confirmation email to user
-    await transporter.sendMail({
+    const userMailOptions = {
       from: `"${process.env.ADMIN_NAME || 'Portfolio Admin'}" <${process.env.SMTP_USER}>`,
       to: req.body.email,
       subject: `✅ Message Received - ${req.body.subject}`,
@@ -378,7 +401,20 @@ This is an automated message. Please do not reply to this email.`,
       </body>
       </html>
       `
-    });
+    };
+
+    try {
+      // Send user confirmation email
+      await transporter.sendMail(userMailOptions);
+      console.log('User confirmation email sent successfully');
+    } catch (userEmailError) {
+      console.error('Error sending user confirmation email:', {
+        error: userEmailError.message,
+        code: userEmailError.code,
+        stack: userEmailError.stack
+      });
+      // Continue with the response even if email fails
+    }
 
     res.status(201).json({ 
       success: true,
