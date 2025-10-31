@@ -169,18 +169,12 @@ app.get('/', async (req, res) => {
           .then(response => response.json())
           .then(data => {
             const statusEl = document.getElementById('frontend-status');
-            statusEl.innerHTML = `
-              <span class="status-dot connected"></span>
-              Frontend: Connected
-            `;
+            statusEl.innerHTML = '<span class="status-dot connected"></span>Frontend: Connected';
           })
           .catch(error => {
             const statusEl = document.getElementById('frontend-status');
             statusEl.className = 'status-item disconnected';
-            statusEl.innerHTML = `
-              <span class="status-dot disconnected"></span>
-              Frontend: Connection Error
-            `;
+            statusEl.innerHTML = '<span class="status-dot disconnected"></span>Frontend: Connection Error';
           });
       </script>
     </body>
