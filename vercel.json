@@ -1,16 +1,10 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "portfolio-frontend/package.json",
-      "use": "@vercel/next",
-      "config": {
-        "buildCommand": "npm run vercel-build"
-      }
-    }
-  ],
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/.*", "dest": "/" }
+  "buildCommand": "cd portfolio-frontend && npm run build",
+  "outputDirectory": "portfolio-frontend/build",
+  "devCommand": "cd portfolio-frontend && npm start",
+  "installCommand": "cd portfolio-frontend && npm install",
+  "framework": "create-react-app",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
