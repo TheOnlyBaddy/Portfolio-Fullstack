@@ -1,6 +1,6 @@
 # 🌐 Personal Portfolio Website
 
-![Portfolio Banner](https://github.com/TheOnlyBaddy/Portfolio/blob/main/portfolio-frontend/public/Portfolio.jpg)
+![Portfolio Banner](https://github.com/TheOnlyBaddy/Portfolio-Fullstack/blob/main/portfolio-frontend/public/Portfolio.jpg)
 
 A modern, responsive **developer portfolio website** showcasing my projects, skills, and journey as a developer.  
 Built with a clean and elegant design, smooth animations, and a functional contact form powered by **Node.js** and **Gmail SMTP** for direct communication.
@@ -72,19 +72,19 @@ http://localhost:5000
 ```
 📸 Screenshots
 Home
-![Home Page](https://github.com/TheOnlyBaddy/Portfolio/blob/main/portfolio-frontend/public/Home.png)
+![Home Page](https://github.com/TheOnlyBaddy/Portfolio-Fullstack/blob/main/portfolio-frontend/public/Home.png)
 
 About
-![About Me Page](https://github.com/TheOnlyBaddy/Portfolio/blob/main/portfolio-frontend/public/About%20Me.png)
+![About Me Page](https://github.com/TheOnlyBaddy/Portfolio-Fullstack/blob/main/portfolio-frontend/public/About%20Me.png)
 
 Projects
-![Projects Page](https://github.com/TheOnlyBaddy/Portfolio/blob/main/portfolio-frontend/public/Project.png)
+![Projects Page](https://github.com/TheOnlyBaddy/Portfolio-Fullstack/blob/main/portfolio-frontend/public/Project.png)
 
 Skills
-![Skills Page](https://github.com/TheOnlyBaddy/Portfolio/blob/main/portfolio-frontend/public/Skills.png)
+![Skills Page](https://github.com/TheOnlyBaddy/Portfolio-Fullstack/blob/main/portfolio-frontend/public/Skills.png)
 
 Contact
-![Contact Me Page](https://github.com/TheOnlyBaddy/Portfolio/blob/main/portfolio-frontend/public/Contact%20Me.png)
+![Contact Me Page](https://github.com/TheOnlyBaddy/Portfolio-Fullstack/blob/main/portfolio-frontend/public/Contact%20Me.png)
 
 #💬 Contact
 #📧 Email: barnwalshubh8002434@gmail.com
