@@ -68,3 +68,4 @@ portfolio-backend/token.json
 portfolio-backend/.env
 portfolio-frontend/.env
 "portfolio-backend/token.json" 
+.vercel
