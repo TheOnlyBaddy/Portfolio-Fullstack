@@ -13,14 +13,9 @@ const config = {
   },
 };
 
-// For development, always use local backend
-// For production, uncomment the line below and comment out the current return
+// Return the appropriate backend URL based on the environment
 config.getBackendUrl = () => {
-  // Uncomment below line for production
-  // return isProduction ? config.backend.hosted : config.backend.local;
-
-  // For development, always use local backend
-  return config.backend.local;
+  return isProduction ? config.backend.hosted : config.backend.local;
 };
 
 // Helper function to get the appropriate frontend URL
