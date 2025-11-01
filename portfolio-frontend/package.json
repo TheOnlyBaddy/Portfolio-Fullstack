@@ -20,6 +20,8 @@
     "prepare": "[ -d .git ] && husky install || echo 'Skipping husky install'",
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "next build && mkdir build && xcopy /E /I .next\\static build\\.next\\static && xcopy /E /I public build\\public",
+    "postbuild": "xcopy /E /I .next\\standalone\\* build\\ && xcopy /E /I .next\\static build\\.next\\static && xcopy /E /I public build\\public",
     "start": "next start",
     "test": "echo \"No test specified\" && exit 0",
     "lint": "eslint src --ext .js,.jsx",
