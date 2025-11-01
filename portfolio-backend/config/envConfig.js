@@ -4,7 +4,7 @@ const config = {
   // Backend URLs
   backend: {
     local: 'http://localhost:5000',
-    hosted: 'https://portfolio-j96l.onrender.com' // Replace with your actual hosted backend URL
+    hosted: 'https://portfolio-1jb9.onrender.com' // Replace with your actual hosted backend URL
   },
   // Frontend URLs
   frontend: {
