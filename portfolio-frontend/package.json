@@ -19,7 +19,7 @@
   "scripts": {
     "prepare": "[ -d .git ] && husky install || echo 'Skipping husky install'",
     "dev": "next dev",
-    "build": "next build --no-lint",
+    "build": "next build",
     "start": "next start",
     "test": "echo \"No test specified\" && exit 0",
     "lint": "eslint src --ext .js,.jsx",
