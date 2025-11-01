@@ -1,8 +1,28 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, useTransform, useMotionValue, useSpring } from 'framer-motion';
 import { Mail, Send, Phone, Map, Github, Linkedin } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
 import { primaryButton } from '../utils/buttonStyles';
+import envConfig from '../config/envConfig';
+
+// Add global styles for autofill
+const autofillStyles = `
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px transparent inset !important;
+    -webkit-text-fill-color: #111827 !important; /* dark:text-white will override this in dark mode */
+    transition: background-color 5000s ease-in-out 0s;
+  }
+  
+  .dark input:-webkit-autofill,
+  .dark input:-webkit-autofill:hover,
+  .dark input:-webkit-autofill:focus,
+  .dark input:-webkit-autofill:active {
+    -webkit-text-fill-color: #f3f4f6 !important; /* light gray for dark mode */
+  }
+`;
 
 // Particle background component
 const ParticlesBackground = () => {
@@ -110,6 +130,7 @@ const Contact = () => {
   const formRef = useRef(null);
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleInputChange = e => {
     const { name, value } = e.target;
@@ -122,11 +143,11 @@ const Contact = () => {
   const handleSubmit = async e => {
     e.preventDefault();
     setSent(false);
+    setError(null);
     setSubmitting(true);
 
     try {
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
-      const apiUrl = `${backendUrl.replace(/\/+$/, '')}/api/contact`;
+      const apiUrl = `${envConfig.getBackendUrl()}/api/contact`;
       console.log('Sending request to:', apiUrl);
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -157,11 +178,13 @@ const Contact = () => {
       setSent(true);
       setFormData({ name: '', email: '', subject: '', message: '' });
 
-      // Reset sent status after 5 seconds
+      // Reset status after 5 seconds
       setTimeout(() => setSent(false), 5000);
     } catch (err) {
       console.error('Error:', err);
-      alert(err.message || 'There was an issue sending your message. Please try again later.');
+      setError(err.message || 'There was an issue sending your message. Please try again later.');
+      // Auto-hide error after 5 seconds
+      setTimeout(() => setError(null), 5000);
     } finally {
       setSubmitting(false);
     }
@@ -233,6 +256,17 @@ const Contact = () => {
       },
     }),
   };
+
+  // Add autofill styles to document head
+  useEffect(() => {
+    const styleElement = document.createElement('style');
+    styleElement.innerHTML = autofillStyles;
+    document.head.appendChild(styleElement);
+
+    return () => {
+      document.head.removeChild(styleElement);
+    };
+  }, []);
 
   return (
     <section
@@ -322,16 +356,49 @@ const Contact = () => {
 
               <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
                 <AnimatePresence>
-                  {sent && (
+                  {sent ? (
                     <motion.div
                       initial={{ opacity: 0, y: -20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
-                      className="p-4 mb-6 text-sm text-green-700 bg-green-100 dark:bg-green-900/50 dark:text-green-300 rounded-lg"
+                      className="p-4 mb-6 text-sm text-green-700 bg-green-100 dark:bg-green-900/50 dark:text-green-300 rounded-lg flex items-center gap-2"
                     >
-                      Message sent successfully! I&apos;ll get back to you soon.
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 flex-shrink-0"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <span>Message sent successfully! I&apos;ll get back to you soon.</span>
                     </motion.div>
-                  )}
+                  ) : error ? (
+                    <motion.div
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      className="p-4 mb-6 text-sm text-red-700 bg-red-100 dark:bg-red-900/50 dark:text-red-300 rounded-lg flex items-center gap-2"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 flex-shrink-0"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <span>{error}</span>
+                    </motion.div>
+                  ) : null}
                 </AnimatePresence>
 
                 <div className="space-y-6">
@@ -351,7 +418,7 @@ const Contact = () => {
                       onChange={handleInputChange}
                       onFocus={() => setActiveField('name')}
                       onBlur={() => setActiveField(null)}
-                      className="w-full px-4 pt-6 pb-2 rounded-xl border border-dark-200 dark:border-dark-700 bg-white/50 dark:bg-dark-700/50 text-dark-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 peer"
+                      className="w-full px-4 pt-6 pb-2 rounded-xl border border-dark-200 dark:border-dark-700 bg-white/50 dark:bg-dark-700/50 text-dark-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 peer autofill:bg-transparent"
                       required
                     />
                     <label
@@ -382,7 +449,7 @@ const Contact = () => {
                       onChange={handleInputChange}
                       onFocus={() => setActiveField('email')}
                       onBlur={() => setActiveField(null)}
-                      className="w-full px-4 pt-6 pb-2 rounded-xl border border-dark-200 dark:border-dark-700 bg-white/50 dark:bg-dark-700/50 text-dark-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 peer"
+                      className="w-full px-4 pt-6 pb-2 rounded-xl border border-dark-200 dark:border-dark-700 bg-white/50 dark:bg-dark-700/50 text-dark-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 peer autofill:bg-transparent"
                       required
                     />
                     <label
@@ -413,7 +480,7 @@ const Contact = () => {
                       onChange={handleInputChange}
                       onFocus={() => setActiveField('subject')}
                       onBlur={() => setActiveField(null)}
-                      className="w-full px-4 pt-6 pb-2 rounded-xl border border-dark-200 dark:border-dark-700 bg-white/50 dark:bg-dark-700/50 text-dark-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 peer"
+                      className="w-full px-4 pt-6 pb-2 rounded-xl border border-dark-200 dark:border-dark-700 bg-white/50 dark:bg-dark-700/50 text-dark-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 peer autofill:bg-transparent"
                       required
                     />
                     <label
@@ -482,6 +549,8 @@ const Contact = () => {
                   </motion.div>
                 </div>
               </form>
+
+              {/* Status messages are now shown at the top of the form */}
             </motion.div>
           </motion.div>
 
