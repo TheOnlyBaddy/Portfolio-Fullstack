@@ -17,7 +17,7 @@
     "typewriter-effect": "^2.22.0"
   },
   "scripts": {
-    "prepare": "if exist .git (husky install) || echo 'Skipping husky install'",
+    "prepare": "[ -d .git ] && husky install || echo 'Skipping husky install'",
     "dev": "next dev",
     "build": "next build --no-lint",
     "start": "next start",
