@@ -4,7 +4,7 @@ const config = {
   // Backend URLs
   backend: {
     local: 'http://localhost:5000',
-    hosted: 'https://portfolio-1jb9.onrender.com', // Your hosted backend URL
+    hosted: 'https://portfolio-fullstack-cauw.onrender.com', // Your hosted backend URL
   },
   // Frontend URLs
   frontend: {
@@ -18,7 +18,7 @@ const config = {
 config.getBackendUrl = () => {
   // Uncomment below line for production
   // return isProduction ? config.backend.hosted : config.backend.local;
-  
+
   // For development, always use local backend
   return config.backend.local;
 };
