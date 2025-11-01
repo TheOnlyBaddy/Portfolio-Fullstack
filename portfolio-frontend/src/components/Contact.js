@@ -3,7 +3,6 @@ import { motion, AnimatePresence, useTransform, useMotionValue, useSpring } from
 import { Mail, Send, Phone, Map, Github, Linkedin } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
 import { primaryButton } from '../utils/buttonStyles';
-import envConfig from '../config/envConfig';
 
 // Add global styles for autofill
 const autofillStyles = `
@@ -147,7 +146,7 @@ const Contact = () => {
     setSubmitting(true);
 
     try {
-      const apiUrl = `${envConfig.getBackendUrl()}/api/contact`;
+      const apiUrl = `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}/api/contact`;
       console.log('Sending request to:', apiUrl);
       const response = await fetch(apiUrl, {
         method: 'POST',
